@@ -1,0 +1,109 @@
+{
+  "dashboard": {
+    "title": "Streaming Payroll",
+    "tags": ["payroll", "finance", "streaming"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Payroll Processing Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "rate(payroll_processed_total[5m])",
+            "legendFormat": "Processing Rate"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Active Payroll Streams",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(payroll_stream_active)",
+            "legendFormat": "Active Streams"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Payroll Errors",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(payroll_errors_total)",
+            "legendFormat": "Total Errors"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 0
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Payroll Amount Processed",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(payroll_amount_processed)",
+            "legendFormat": "Amount Processed"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Department Payroll Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(payroll_amount) by (department)",
+            "legendFormat": "{{department}}"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 16,
+    "version": 0
+  }
+}

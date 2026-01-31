@@ -1,0 +1,112 @@
+groups:
+  - name: system_alerts
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "High CPU usage detected on {{ $labels.instance }}"
+          description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% (current value: {{ $value }}%)"
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          category: system
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is above 90% (current value: {{ $value }}%)"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: service
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service has been down for more than 2 minutes"
+
+  - name: attendance_alerts
+    interval: 1m
+    rules:
+      - alert: LowAttendanceRate
+        expr: (sum(attendance_present) / sum(attendance_total)) * 100 < 70
+        for: 10m
+        labels:
+          severity: warning
+          category: hr
+        annotations:
+          summary: "Low attendance rate detected"
+          description: "Attendance rate is below 70% (current value: {{ $value }}%)"
+
+      - alert: HighAbsenteeism
+        expr: sum(attendance_absent) > 50
+        for: 5m
+        labels:
+          severity: warning
+          category: hr
+        annotations:
+          summary: "High absenteeism detected"
+          description: "More than 50 employees are absent (current value: {{ $value }})"
+
+  - name: payroll_alerts
+    interval: 1m
+    rules:
+      - alert: PayrollProcessingError
+        expr: rate(payroll_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          category: payroll
+        annotations:
+          summary: "Payroll processing errors detected"
+          description: "Error rate is {{ $value }} errors per second"
+
+      - alert: PayrollStreamDown
+        expr: sum(payroll_stream_active) == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: payroll
+        annotations:
+          summary: "No active payroll streams"
+          description: "All payroll processing streams are down"
+
+      - alert: SlowPayrollProcessing
+        expr: rate(payroll_processed_total[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+          category: payroll
+        annotations:
+          summary: "Slow payroll processing detected"
+          description: "Processing rate is below 1 record per second"
+
+  - name: leave_alerts
+    interval: 5m
+    rules:
+      - alert: HighPendingLeaveRequests
+        expr: sum(leave_requests_pending) > 100
+        for: 30m
+        labels:
+          severity: warning
+          category: hr
+        annotations:
+          summary: "High number of pending leave requests"
+          description: "More than 100 leave requests are pending approval (current value: {{ $value }})"

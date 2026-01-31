@@ -1,0 +1,75 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'render-monitoring'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - 'alert-rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          instance: 'render-vm-01'
+
+  # Application metrics
+  - job_name: 'app-metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['app:8080']
+        labels:
+          service: 'hr-management'
+          component: 'backend'
+
+  # Attendance service
+  - job_name: 'attendance-service'
+    scrape_interval: 1m
+    static_configs:
+      - targets: ['attendance-service:8081']
+        labels:
+          service: 'attendance'
+
+  # Leave management service
+  - job_name: 'leave-service'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['leave-service:8082']
+        labels:
+          service: 'leave-management'
+
+  # Payroll streaming service
+  - job_name: 'payroll-service'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['payroll-service:8083']
+        labels:
+          service: 'payroll'
+          critical: 'true'
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+
+  # Alertmanager metrics
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']

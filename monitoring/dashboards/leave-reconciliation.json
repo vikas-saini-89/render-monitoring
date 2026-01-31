@@ -1,0 +1,97 @@
+{
+  "dashboard": {
+    "title": "Leave Reconciliation",
+    "tags": ["leave", "hr", "reconciliation"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Leave Balance Summary",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(leave_balance_total)",
+            "legendFormat": "Total Leave Days"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Pending Leave Requests",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(leave_requests_pending)",
+            "legendFormat": "Pending"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 8,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Approved Leaves",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(leave_requests_approved)",
+            "legendFormat": "Approved"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 16,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Leave Trends by Type",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(leave_taken) by (leave_type)",
+            "legendFormat": "{{leave_type}}"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 12,
+          "x": 0,
+          "y": 6
+        }
+      },
+      {
+        "id": 5,
+        "title": "Reconciliation Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "leave_reconciliation_status",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 12,
+          "x": 12,
+          "y": 6
+        }
+      }
+    ],
+    "refresh": "10m",
+    "schemaVersion": 16,
+    "version": 0
+  }
+}

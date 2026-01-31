@@ -1,0 +1,80 @@
+{
+  "dashboard": {
+    "title": "Attendance Pulse",
+    "tags": ["attendance", "hr", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Daily Attendance Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(attendance_present) / sum(attendance_total) * 100",
+            "legendFormat": "Attendance %"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Absent Employees",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(attendance_absent)",
+            "legendFormat": "Absent Count"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Late Arrivals",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(attendance_late)",
+            "legendFormat": "Late Arrivals"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Department Attendance",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "sum(attendance_present) by (department)",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      }
+    ],
+    "refresh": "5m",
+    "schemaVersion": 16,
+    "version": 0
+  }
+}
