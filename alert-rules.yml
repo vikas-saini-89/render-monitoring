@@ -1,0 +1,176 @@
+groups:
+  - name: college_hr_system_critical
+    interval: 30s
+    rules:
+      # CRITICAL: OOM Risk (< 100MB available)
+      - alert: CriticalOOMRisk
+        expr: node_memory_MemAvailable_bytes < 100_000_000
+        for: 1m
+        labels:
+          severity: critical
+          team: devops
+          service: college_hr
+        annotations:
+          summary: "CRITICAL: Out of Memory Risk"
+          description: "Available RAM: {{ humanize $value }}B. VM will crash immediately. Action: Kill stuck process, restart Celery, or restart VM."
+          dashboard: "payroll-monitoring"
+          
+      # CRITICAL: Database Deadlock
+      - alert: CriticalDatabaseDeadlock
+        expr: pg_locks_waiting > 0
+        for: 2m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "CRITICAL: Database Deadlock"
+          description: "{{ $value }} transactions waiting for locks. Kill blocking query:"
+          
+      # CRITICAL: Centrifugo Down (real-time updates dead)
+      - alert: CriticalCentrifugoDown
+        expr: up{job="centrifugo"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "CRITICAL: Centrifugo Down"
+          description: "Real-time updates are dead. HR dashboard won't update. Check Centrifugo service."
+          
+      # CRITICAL: Payroll Processing Failure
+      - alert: CriticalPayrollProcessingFailed
+        expr: |
+          (rate(celery_task_total{task_name="process_payroll_chunk", status="FAILURE"}[5m]) > 0.1)
+          or
+          (celery_task_total{task_name="process_payroll_chunk", status="FAILURE"} > 5)
+        for: 2m
+        labels:
+          severity: critical
+          team: payroll_ops
+        annotations:
+          summary: "CRITICAL: Payroll chunks failing"
+          description: "Payroll run is failing. Data integrity at risk. Failure rate: {{ humanize $value }}"
+
+  - name: college_hr_system_warning
+    interval: 30s
+    rules:
+      # WARNING: RAM Getting Tight (100-300MB available)
+      - alert: WarningRAMTight
+        expr: node_memory_MemAvailable_bytes < 300_000_000 and node_memory_MemAvailable_bytes > 100_000_000
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "WARNING: RAM Getting Tight"
+          description: "Available RAM: {{ humanize $value }}B. Monitor closely during payroll runs."
+          
+      # WARNING: Payroll Queue Backlog
+      - alert: WarningPayrollQueueBacklog
+        expr: celery_queue_length{queue="payroll_tasks"} > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: payroll_ops
+        annotations:
+          summary: "WARNING: Payroll Queue Backlog"
+          description: "{{ $value }} payroll tasks waiting in queue. Processing may be slow or worker stuck."
+          
+      # WARNING: Chunk Processing Slow (>5 seconds)
+      - alert: WarningPayrollChunkSlow
+        expr: histogram_quantile(0.95, rate(celery_task_duration_seconds_bucket{task_name="process_payroll_chunk"}[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+          team: payroll_ops
+        annotations:
+          summary: "WARNING: Payroll Chunks Processing Slow"
+          description: "95th percentile chunk duration: {{ humanize $value }}s (target: <2s). Check database performance."
+          
+      # WARNING: Attendance API Slow
+      - alert: WarningAttendanceAPILatency
+        expr: |
+          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m]) 
+          / rate(django_http_request_duration_seconds_count{path="/api/attendance/check-in"}[5m]) 
+          > 1
+        for: 2m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "WARNING: Attendance API Slow"
+          description: "Average response time: {{ humanize $value }}s (target: <100ms). Check Redis and DB connection."
+          
+      # WARNING: High Disk Usage
+      - alert: WarningHighDiskUsage
+        expr: node_filesystem_used_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "WARNING: High Disk Usage"
+          description: "Disk usage on /: {{ humanizePercentage $value }}. Clean up old logs or expand disk."
+          
+      # WARNING: High I/O Wait (slow database)
+      - alert: WarningHighIOWait
+        expr: rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 30
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "WARNING: High I/O Wait"
+          description: "I/O wait time: {{ humanizePercentage $value }}. Database queries are slow."
+          
+      # WARNING: Low Cache Hit Ratio
+      - alert: WarningLowCacheHitRatio
+        expr: pg_cache_hit_ratio < 0.98
+        for: 10m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "WARNING: Low Database Cache Hit Ratio"
+          description: "Cache hit ratio: {{ humanizePercentage $value }} (target: >99%). May need more RAM."
+
+  - name: college_hr_system_info
+    interval: 30s
+    rules:
+      # INFO: RAM Warning Level
+      - alert: InfoRAMWarning
+        expr: node_memory_MemAvailable_bytes < 500_000_000 and node_memory_MemAvailable_bytes > 300_000_000
+        for: 10m
+        labels:
+          severity: info
+          team: devops
+        annotations:
+          summary: "INFO: RAM Usage High"
+          description: "Available RAM: {{ humanize $value }}B. Normal operation but approaching warning threshold."
+          
+      # INFO: Attendance API Response Time
+      - alert: InfoAttendanceAPITiming
+        expr: |
+          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m]) 
+          / rate(django_http_request_duration_seconds_count{path="/api/attendance/check-in"}[5m])
+        for: 1m
+        labels:
+          severity: info
+          team: ops
+        annotations:
+          summary: "INFO: Attendance API Response Time"
+          description: "Current response time: {{ humanize $value }}s (baseline for analysis)"
+          
+      # INFO: Payroll Success Rate
+      - alert: InfoPayrollSuccessRate
+        expr: |
+          celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"} 
+          / (celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"} 
+          + celery_task_total{task_name="process_payroll_chunk", status="FAILURE"})
+        for: 1m
+        labels:
+          severity: info
+          team: payroll_ops
+        annotations:
+          summary: "INFO: Payroll Success Rate"
+          description: "Current success rate: {{ humanizePercentage $value }}"

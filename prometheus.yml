@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 60s
+  scrape_timeout: 15s
+  evaluation_interval: 60s
+
+# Alertmanager configuration (disabled for free tier)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - localhost:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - '/etc/prometheus/alert-rules.yml'
+
+scrape_configs:
+  # Self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 60s
+
+  # Django application metrics
+  - job_name: 'django-app'
+    static_configs:
+      - targets: ['your-app.onrender.com']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    metric_relabel_configs:
+      # Drop high-cardinality metrics to save memory
+      - source_labels: [__name__]
+        regex: 'django_request_path_total'
+        action: drop
+      - source_labels: [__name__]
+        regex: 'django_request_path_view_.*'
+        action: drop
+    
+  # Centrifugo - real-time metrics
+  - job_name: 'centrifugo'
+    static_configs:
+      - targets: ['{{ 1GB_VM_IP }}:8000']
+    metrics_path: '/api/stats'
+    scrape_interval: 30s
+    scrape_timeout: 10s

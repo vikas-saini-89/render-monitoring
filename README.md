@@ -1,6 +1,6 @@
-# Monitoring Stack for Render
+# Monitoring Stack for Render (Free Tier Optimized)
 
-A comprehensive monitoring solution built with Prometheus, Grafana, and Alertmanager for tracking HR systems including attendance, leave management, and payroll processing.
+A lightweight monitoring solution built with Prometheus and Grafana for tracking HR systems including attendance, leave management, and payroll processing. **Optimized for Render's free tier (512MB RAM)**.
 
 ## 🎯 Overview
 
@@ -12,12 +12,9 @@ This monitoring stack provides real-time visibility into:
 
 ## 📦 Components
 
-### Core Services
-- **Prometheus** (Port 9090): Metrics collection and alerting
-- **Grafana** (Port 3000): Visualization and dashboards
-- **Alertmanager** (Port 9093): Alert routing and notification
-- **Node Exporter** (Port 9100): System metrics
-- **cAdvisor** (Port 8080): Container metrics
+### Core Services (All-in-One Container)
+- **Prometheus** (Internal Port 9090): Metrics collection
+- **Grafana** (Public Port 3000): Visualization and dashboards
 
 ### Dashboards
 - `attendance-pulse.json`: Real-time attendance monitoring
@@ -25,29 +22,58 @@ This monitoring stack provides real-time visibility into:
 - `streaming-payroll.json`: Payroll processing metrics
 - `system-health.json`: Infrastructure monitoring
 
-## 🚀 Quick Start
+## 🚀 Deployment on Render (Free Tier)
+
+### Quick Deploy
+1. Push this repository to GitHub:
+   ```bash
+   git add .
+   git commit -m "Deploy monitoring stack"
+   git push origin main
+   ```
+
+2. Go to [Render Dashboard](https://dashboard.render.com/)
+
+3. Click **"New +"** → **"Blueprint"**
+
+4. Connect your GitHub repository
+
+5. Render will automatically detect `render.yaml` and deploy the service
+
+6. Wait for deployment to complete (3-5 minutes)
+
+### Access Your Monitoring Stack
+- **Grafana URL**: `https://monitoring-stack.onrender.com`
+- **Username**: `admin`
+- **Password**: Check Render dashboard → Service → Environment → `GF_SECURITY_ADMIN_PASSWORD`
+
+### Important Notes for Free Tier
+- ⚠️ **Free tier services sleep after 15 minutes of inactivity**
+- ⚠️ **No persistent storage** - data resets on service restart
+- ⚠️ **512MB RAM limit** - optimized for minimal resource usage
+- ⚠️ **Storage retention**: 7 days, max 256MB
+- 💡 First request after sleep takes ~30 seconds to wake up
+
+### Configure Your Application Metrics
+1. Update `prometheus.yml` with your application URL:
+   ```yaml
+   scrape_configs:
+     - job_name: 'django-app'
+       static_configs:
+         - targets: ['your-app.onrender.com']
+   ```
+
+2. Commit and push changes to auto-deploy
+
+## 🐳 Local Development
 
 ### Prerequisites
 - Docker 20.10+
 - Docker Compose 1.29+
-- 1GB+ RAM (2GB+ recommended)
+- 512MB+ RAM
 - Linux/Unix environment
 
-### Deployment Options
-
-#### Option 1: 1GB VM (Resource Constrained)
-```bash
-./deploy-1gb-vm.sh
-```
-Optimized for minimal resource usage with memory limits.
-
-#### Option 2: Standard VM (2GB+)
-```bash
-./deploy-vm2.sh
-```
-Full-featured deployment with all services.
-
-### Manual Deployment
+### Quick Start
 ```bash
 # Start all services
 docker-compose up -d
