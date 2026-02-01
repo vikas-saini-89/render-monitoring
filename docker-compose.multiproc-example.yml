@@ -1,0 +1,23 @@
+version: '3.8'
+
+# Example to show how to configure a shared multiprocess dir for prometheus_client
+# Mount this volume into both web and celery services so counters/histograms are aggregated
+
+services:
+  web:
+    image: your-web-image
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
+    volumes:
+      - prometheus_multiproc:/var/prometheus-multiproc
+
+  celery:
+    image: your-celery-image
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
+    volumes:
+      - prometheus_multiproc:/var/prometheus-multiproc
+
+volumes:
+  prometheus_multiproc:
+    driver: local

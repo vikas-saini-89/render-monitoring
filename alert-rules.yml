@@ -51,6 +51,17 @@ groups:
           summary: "CRITICAL: Payroll chunks failing"
           description: "Payroll run is failing. Data integrity at risk. Failure rate: {{ humanize $value }}"
 
+      # CRITICAL: Payroll Queue Backlog (very large backlog)
+      - alert: CriticalPayrollQueueBacklog
+        expr: celery_queue_length{queue="payroll_tasks"} > 500
+        for: 10m
+        labels:
+          severity: critical
+          team: payroll_ops
+        annotations:
+          summary: "CRITICAL: Payroll Queue Backlog"
+          description: "{{ $value }} payroll tasks waiting in queue for >10m. This backlog can cause downstream OOMs and missed payrolls. Take action: scale workers or pause job ingestion."
+
   - name: college_hr_system_warning
     interval: 30s
     rules:
@@ -75,6 +86,17 @@ groups:
         annotations:
           summary: "WARNING: Payroll Queue Backlog"
           description: "{{ $value }} payroll tasks waiting in queue. Processing may be slow or worker stuck."
+
+      # WARNING: Database Pool High Usage
+      - alert: WarningDBPoolHighUsage
+        expr: pg_stat_activity_count{datname="college_hr"} > 90
+        for: 5m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "WARNING: Database connection pool high usage"
+          description: "Active DB connections ({{ $value }}) above 90. Adjust threshold to match your DB pool max, or increase pool size."
           
       # WARNING: Chunk Processing Slow (>5 seconds)
       - alert: WarningPayrollChunkSlow

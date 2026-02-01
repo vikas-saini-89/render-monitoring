@@ -160,6 +160,38 @@ Edit `prometheus.yml` to configure:
 - Target endpoints
 - Recording rules
 
+### Celery & Multiprocess metrics (Important for multi-process deployments)
+If your Django app and Celery workers run in separate processes (or separate containers), use the Prometheus multiprocess collector so all processes contribute to a single `/metrics` endpoint.
+
+- Use `prometheus_client` multiprocess mode with `PROMETHEUS_MULTIPROC_DIR` pointing to a shared writable directory mounted into both web and worker containers.
+- Ensure the directory is cleaned on process start (files left behind from previous runs can skew metrics).
+
+Example `docker-compose` snippet (mount a shared volume into both services):
+
+```yaml
+services:
+  web:
+    image: your-web-image
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
+    volumes:
+      - prometheus_multiproc:/var/prometheus-multiproc
+
+  celery:
+    image: your-celery-image
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
+    volumes:
+      - prometheus_multiproc:/var/prometheus-multiproc
+
+volumes:
+  prometheus_multiproc:
+```
+
+Test locally:
+- Start web and celery with the shared volume.
+- Run a task that increments a counter in the worker and ensure `/metrics` on the web shows aggregated counts.
+
 ### Alertmanager
 Edit `alertmanager.yml` to configure:
 - Notification receivers
