@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
     container_name: prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -16,12 +16,22 @@ services:
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: ${PROMETHEUS_MEM}
     networks:
       - monitoring
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.25.0
     container_name: alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
@@ -31,16 +41,26 @@ services:
       - alertmanager_data:/alertmanager
     ports:
       - "9093:9093"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9093/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: ${ALERTMANAGER_MEM}
     networks:
       - monitoring
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     container_name: grafana
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
@@ -48,6 +68,16 @@ services:
       - ./dashboards:/etc/grafana/provisioning/dashboards
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: ${GRAFANA_MEM}
     networks:
       - monitoring
     depends_on:
@@ -55,7 +85,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.6.1
     container_name: node-exporter
     command:
       - '--path.rootfs=/host'
@@ -63,12 +93,22 @@ services:
       - /:/host:ro,rslave
     ports:
       - "9100:9100"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9100/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: ${NODE_EXPORTER_MEM}
     networks:
       - monitoring
     restart: unless-stopped
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -78,6 +118,42 @@ services:
       - /dev/disk/:/dev/disk:ro
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: ${CADVISOR_MEM}
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.26-alpine
+    container_name: nginx
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/htpasswd:/etc/nginx/htpasswd:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - grafana
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --no-check-certificate --header='Host: localhost' https://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: ${NGINX_MEM}
     networks:
       - monitoring
     restart: unless-stopped

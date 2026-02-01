@@ -5,6 +5,28 @@
 
 set -e
 
+# Ensure a conservative .env resource profile exists for low-memory hosts (target total ~500MB)
+if [ ! -f .env ]; then
+  echo "Creating .env with conservative resource limits (target total: ~500MB)..."
+  cat > .env <<'EOF'
+# Resource limits (memory values accepted by Docker Compose, e.g., 200M)
+PROMETHEUS_MEM=200M
+GRAFANA_MEM=120M
+ALERTMANAGER_MEM=80M
+CADVISOR_MEM=50M
+NODE_EXPORTER_MEM=20M
+NGINX_MEM=30M
+EOF
+  echo ".env created — edit values if needed."
+fi
+
+# Warn if host memory is below recommended minimum
+TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo || echo 0)
+TOTAL_MEM_MB=$((TOTAL_MEM_KB/1024))
+if [ "$TOTAL_MEM_MB" -gt 0 ] && [ "$TOTAL_MEM_MB" -lt 500 ]; then
+  echo "⚠ Host memory is ${TOTAL_MEM_MB}MB — below recommended 500MB. Consider increasing host RAM or reducing service limits."
+fi
+
 SKIP_NODE_EXPORTER=${1:-false}
 VM_IP=$(hostname -I | awk '{print $1}')
 

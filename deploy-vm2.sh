@@ -5,6 +5,21 @@
 
 set -e
 
+# Ensure .env exists with resource limits (suitable for a 2GB+ VM)
+if [ ! -f .env ]; then
+  echo "Creating .env with default resource limits for standard VM..."
+  cat > .env <<'EOF'
+# Resource limits (memory values accepted by Docker Compose, e.g., 300M)
+PROMETHEUS_MEM=300M
+GRAFANA_MEM=250M
+ALERTMANAGER_MEM=150M
+CADVISOR_MEM=100M
+NODE_EXPORTER_MEM=20M
+NGINX_MEM=50M
+EOF
+  echo ".env created — edit values if needed."
+fi
+
 ENV=${1:-production}
 MONITORING_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

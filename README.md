@@ -44,10 +44,36 @@ This monitoring stack provides real-time visibility into:
 
 ### Access Your Monitoring Stack
 - **Grafana URL**: `https://monitoring-stack.onrender.com`
-- **Username**: `admin`
-- **Password**: Check Render dashboard → Service → Environment → `GF_SECURITY_ADMIN_PASSWORD`
+
+**Admin credentials**: Set the Grafana admin password at deploy time using an environment variable or Docker secret. Example (recommended):
+
+- Using `.env` (local or CI):
+```bash
+# create a .env file with a secure password
+export GF_SECURITY_ADMIN_PASSWORD="$(openssl rand -base64 18)"
+# docker-compose will use variables from .env automatically
+```
+
+- Using Docker secrets (Swarm):
+```bash
+# echo "your-super-secret" | docker secret create grafana_admin_password -
+# then set in docker-compose (example):
+#    secrets:
+#      - grafana_admin_password
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+```
 
 ### Important Notes for Free Tier
+
+**Pinned images (production guidance):**
+- Prometheus: `prom/prometheus:v2.48.0`
+- Alertmanager: `prom/alertmanager:v0.25.0`
+- Grafana: `grafana/grafana:10.2.3`
+- Node Exporter: `prom/node-exporter:v1.6.1`
+- cAdvisor: `gcr.io/cadvisor/cadvisor:v0.47.0`
+
+(Images are pinned in `docker-compose.yml` to provide stability and reproducible upgrades.)
 - ⚠️ **Free tier services sleep after 15 minutes of inactivity**
 - ⚠️ **No persistent storage** - data resets on service restart
 - ⚠️ **512MB RAM limit** - optimized for minimal resource usage
@@ -164,13 +190,18 @@ Edit `alert-rules.yml` to define:
 ## 🛠️ Maintenance
 
 ### Backup
-```bash
-# Backup Prometheus data
-docker-compose exec prometheus tar czf /tmp/prometheus-backup.tar.gz /prometheus
+A simple backup script is provided to snapshot Prometheus and Grafana data. Run it on the host where docker-compose runs.
 
-# Backup Grafana dashboards
-docker-compose exec grafana tar czf /tmp/grafana-backup.tar.gz /var/lib/grafana
+```bash
+# Create a timestamped backup (saved to ./backups)
+./scripts/backup.sh
+
+# To restore (will stop services briefly) run:
+./scripts/restore.sh /path/to/backups/YYYYMMDD-HHMMSS
 ```
+
+**Notes:**
+- Backups include Prometheus TSDB and Grafana data directory. Test restores in a staging environment before using in production.
 
 ### Updates
 ```bash
@@ -213,17 +244,25 @@ This checks:
 ## 🔐 Security
 
 ### Default Credentials
-**Change default passwords immediately after deployment!**
+**Change default passwords immediately after deployment!** Configure the Grafana admin password via environment variable or Docker secrets (see "Access Your Monitoring Stack").
 
+### TLS + Basic Auth (Nginx reverse proxy example)
+A lightweight `nginx` reverse proxy is included (sample config in `nginx/conf.d/`) to terminate TLS and enforce basic auth. Steps:
+
+1. Create certificates in `nginx/certs/` (`fullchain.pem` and `privkey.pem`) or point to your cert manager.
+2. Create a basic auth file (example):
 ```bash
-# Grafana: Access Settings > Users to change admin password
-# Or use environment variables in docker-compose.yml:
-# - GF_SECURITY_ADMIN_PASSWORD=your-secure-password
+# generate htpasswd entry for user 'admin'
+docker run --rm httpd:2.4 htpasswd -Bbn admin 'your-password' > nginx/htpasswd
 ```
+3. Start the stack; nginx proxies HTTPS traffic to Grafana and protects it with basic auth.
+4. Health endpoint available: `https://<host>/health` (proxies to Grafana/Prometheus health endpoints)
+
+> The included `docker-compose.yml` includes an `nginx` service (commented by default) and an example configuration. Adjust `nginx/conf.d/monitoring.conf` to match your domain and cert setup.
 
 ### Best Practices
 - Use TLS/SSL for production deployments
-- Restrict network access with firewall rules
+- Restrict network access with firewall rules (VPC, security groups)
 - Regularly update Docker images
 - Enable authentication on all services
 - Rotate credentials periodically
