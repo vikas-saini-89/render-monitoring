@@ -24,9 +24,13 @@ RUN wget -q https://dl.grafana.com/oss/release/grafana-10.2.3.linux-amd64.tar.gz
 # Create grafana and prometheus users and directories
 RUN adduser -D -h /var/lib/grafana grafana && \
     adduser -D -h /prometheus prometheus && \
-    mkdir -p /etc/prometheus /etc/grafana /var/lib/grafana /var/log/grafana /prometheus /etc/supervisor/conf.d && \
-    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana /opt/grafana && \
+    mkdir -p /etc/prometheus /etc/grafana /etc/grafana/provisioning/plugins /etc/grafana/provisioning/notifiers /etc/grafana/provisioning/alerting /var/lib/grafana/plugins /var/log/grafana /prometheus /etc/supervisor/conf.d && \
+    chown -R grafana:grafana /var/lib/grafana /var/lib/grafana/plugins /var/log/grafana /etc/grafana /etc/grafana/provisioning && \
     chown -R prometheus:prometheus /opt/prometheus /prometheus /etc/prometheus
+
+# Copy helper scripts
+COPY wait-for-prometheus.sh /usr/local/bin/wait-for-prometheus
+RUN chmod +x /usr/local/bin/wait-for-prometheus
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/prometheus.yml
