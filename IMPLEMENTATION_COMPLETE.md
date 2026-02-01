@@ -165,7 +165,7 @@ monitoring/
 
 **Global Settings:**
 - Resolve timeout: 5 minutes
-- SMTP configured for email notifications
+- SMTP/email alerts: **optional** (not configured by default; can be enabled in `alertmanager.yml`)
 
 **Routing:**
 - Group by: alertname, cluster, service

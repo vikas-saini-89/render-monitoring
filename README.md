@@ -148,8 +148,8 @@ After deployment, access the services at:
 
 ### Alert Routing
 Alerts are routed to appropriate teams via:
-- Email notifications
-- Webhook integrations
+- Webhook integrations (Slack) — recommended
+- Email notifications (optional; disabled by default in `alertmanager.yml`)
 - Severity-based escalation
 
 ## 🔧 Configuration

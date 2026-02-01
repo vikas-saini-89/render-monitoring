@@ -1,3 +1,4 @@
+---
 global:
   scrape_interval: 60s
   scrape_timeout: 15s
@@ -36,7 +37,7 @@ scrape_configs:
       - source_labels: [__name__]
         regex: 'django_request_path_view_.*'
         action: drop
-    
+
   # Centrifugo - real-time metrics
   - job_name: 'centrifugo'
     static_configs:

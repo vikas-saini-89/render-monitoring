@@ -1,3 +1,4 @@
+---
 global:
   resolve_timeout: 5m
   slack_api_url: '{{ SLACK_WEBHOOK_URL }}'  # Set via environment or config
@@ -20,7 +21,7 @@ route:
       receiver: 'critical-alerts'
       group_wait: 0s  # Send immediately
       repeat_interval: 5m  # Repeat every 5 minutes
-      
+
     # WARNING alerts - less urgent
     - match:
         severity: warning
@@ -51,20 +52,17 @@ receivers:
         text: '{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}'
         color: 'danger'  # Red in Slack
         send_resolved: true
-    email_configs:
-      - to: 'devops@college.edu'
-        from: 'alerting@college.edu'
-        smarthost: 'smtp.gmail.com:587'
-        auth_username: 'alerting@college.edu'
-        auth_password: '{{ ALERTING_EMAIL_PASSWORD }}'
-        headers:
-          Subject: 'CRITICAL ALERT: {{ .GroupLabels.alertname }}'
-    # Uncomment for PagerDuty integration
-    # pagerduty_configs:
-    #   - service_key: '{{ PAGERDUTY_SERVICE_KEY }}'
-    #     description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
-
-  # Warning alerts - Slack only
+    # Email configs are disabled by default. To enable email alerts, uncomment and
+    # configure SMTP credentials (set as environment secrets) and restart Alertmanager.
+    # Example (uncomment to enable):
+    # email_configs:
+    #   - to: 'devops@college.edu'
+    #     from: 'alerting@college.edu'
+    #     smarthost: 'smtp.gmail.com:587'
+    #     auth_username: 'alerting@college.edu'
+    #     auth_password: '{{ ALERTING_EMAIL_PASSWORD }}'
+    #     headers:
+    #       Subject: 'CRITICAL ALERT: {{ .GroupLabels.alertname }}'
   - name: 'warning-alerts'
     slack_configs:
       - channel: '#warnings'

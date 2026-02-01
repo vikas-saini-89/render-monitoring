@@ -122,17 +122,17 @@ Edit `alert-rules.yml` to customize thresholds:
 
 ### Configure Alertmanager
 
-Edit `alertmanager.yml` to set up notifications:
+Edit `alertmanager.yml` to set up notifications. Email alerts are optional and disabled by default; to enable SMTP, uncomment and configure the following example in `alertmanager.yml` and set credentials as secrets in your deployment platform:
 
 ```yaml
-receivers:
-  - name: 'email-alerts'
-    email_configs:
-      - to: 'your-team@company.com'
-        from: 'alerts@company.com'
-        smarthost: 'smtp.company.com:587'
-        auth_username: 'alerts@company.com'
-        auth_password: 'your-password'
+# receivers:
+#   - name: 'email-alerts'
+#     email_configs:
+#       - to: 'your-team@company.com'
+#         from: 'alerts@company.com'
+#         smarthost: 'smtp.company.com:587'
+#         auth_username: 'alerts@company.com'
+#         auth_password: 'your-password'
 ```
 
 ### Configure Grafana
