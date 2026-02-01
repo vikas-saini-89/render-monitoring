@@ -64,14 +64,19 @@ export GF_SECURITY_ADMIN_PASSWORD="$(openssl rand -base64 18)"
 #      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
 ```
 
-### Important Notes for Free Tier
+### Important Notes for Free Tier / Low-memory hosts
+
+This repository includes a **low-memory profile** suitable for constrained college ERP VMs (~500MB RAM). To use it:
+
+- Copy `.env.lowmem.example` to `.env` (or run `./deploy-1gb-vm.sh` which will create a conservative `.env`).
+- By default the stack does **not** start heavy components (cAdvisor) unless you enable them with `export COMPOSE_PROFILES=heavy` before running `docker-compose up -d`.
 
 **Pinned images (production guidance):**
-- Prometheus: `prom/prometheus:v2.48.0`
+- Prometheus: `prom/prometheus:v2.48.0` (3d retention, 128MB retention size)
 - Alertmanager: `prom/alertmanager:v0.25.0`
 - Grafana: `grafana/grafana:10.2.3`
 - Node Exporter: `prom/node-exporter:v1.6.1`
-- cAdvisor: `gcr.io/cadvisor/cadvisor:v0.47.0`
+- cAdvisor: `gcr.io/cadvisor/cadvisor:v0.47.0` (disabled by default in low-memory profile)
 
 (Images are pinned in `docker-compose.yml` to provide stability and reproducible upgrades.)
 - ⚠️ **Free tier services sleep after 15 minutes of inactivity**

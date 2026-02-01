@@ -139,6 +139,26 @@ if [ -f ".env" ]; then
     else
         print_ok "GF_SECURITY_ADMIN_PASSWORD is set (from .env)"
     fi
+
+    # Estimate memory usage from .env values (convert M/G to MB)
+    mem_total_mb=0
+    for var in PROMETHEUS_MEM GRAFANA_MEM ALERTMANAGER_MEM CADVISOR_MEM NODE_EXPORTER_MEM NGINX_MEM; do
+        val="${!var:-0}"
+        if [[ $val =~ ([0-9]+)M$ ]]; then
+            mem_mb=${BASH_REMATCH[1]}
+        elif [[ $val =~ ([0-9]+)G$ ]]; then
+            mem_mb=$((BASH_REMATCH[1]*1024))
+        else
+            mem_mb=0
+        fi
+        mem_total_mb=$((mem_total_mb + mem_mb))
+    done
+
+    if [ $mem_total_mb -le 500 ]; then
+        print_ok "Estimated total service memory: ${mem_total_mb}MB (<= 500MB) — good for low-memory hosts"
+    else
+        print_warning "Estimated total service memory: ${mem_total_mb}MB (> 500MB). Adjust .env values for low-memory deployment"
+    fi
 else
     print_warning ".env file not found. Use .env.example as a template and set secure values"
 fi

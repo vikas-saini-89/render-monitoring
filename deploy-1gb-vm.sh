@@ -9,13 +9,14 @@ set -e
 if [ ! -f .env ]; then
   echo "Creating .env with conservative resource limits (target total: ~500MB)..."
   cat > .env <<'EOF'
-# Resource limits (memory values accepted by Docker Compose, e.g., 200M)
-PROMETHEUS_MEM=200M
-GRAFANA_MEM=120M
-ALERTMANAGER_MEM=80M
-CADVISOR_MEM=50M
+# Low-memory profile (target total ~500MB)
+PROMETHEUS_MEM=160M
+GRAFANA_MEM=100M
+ALERTMANAGER_MEM=60M
+CADVISOR_MEM=20M
 NODE_EXPORTER_MEM=20M
 NGINX_MEM=30M
+# To enable cadvisor and other heavy services, set: export COMPOSE_PROFILES=heavy
 EOF
   echo ".env created — edit values if needed."
 fi
