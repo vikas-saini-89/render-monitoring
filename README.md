@@ -192,6 +192,10 @@ Test locally:
 - Start web and celery with the shared volume.
 - Run a task that increments a counter in the worker and ensure `/metrics` on the web shows aggregated counts.
 
+Cleanup script (recommended):
+- A helper script `scripts/clean_multiproc_dir.sh` is included to remove stale multiprocess files on container startup. Run it before starting your web or worker processes (see `docker-compose.multiproc-example.yml` for an example using `entrypoint`).
+- Ensure the multiproc directory is writable by the process that runs Prometheus client.
+
 ### Alertmanager
 Edit `alertmanager.yml` to configure:
 - Notification receivers
