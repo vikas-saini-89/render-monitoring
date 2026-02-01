@@ -1,0 +1,31 @@
+# Example Render service configuration (use this as a starting point)
+# Replace placeholder values or set secrets in the Render Dashboard.
+
+services:
+  - type: web
+    name: monitoring-stack
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: GF_SECURITY_ADMIN_USER
+        value: admin
+      # Recommended: set the Grafana admin password as a generated secret in Render
+      - key: GF_SECURITY_ADMIN_PASSWORD
+        generateValue: true
+      - key: GF_USERS_ALLOW_SIGN_UP
+        value: false
+
+    # Alerting integrations (store as Render secrets / env vars)
+    # - Slack webhook (store as a secret or an env var in the Render Dashboard)
+    # - SMTP credentials (if you use email alerts)
+
+    # Example env vars to configure in the Render Dashboard (NOT committed):
+    # SLACK_WEBHOOK_URL: <set as Secret>
+    # ALERTING_EMAIL_PASSWORD: <set as Secret>
+    # ALERTING_EMAIL_USERNAME: alerting@your-domain
+    # ALERTING_SMARTHOST: smtp.example.com:587
+
+    healthCheckPath: /api/health

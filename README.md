@@ -164,36 +164,10 @@ Edit `prometheus.yml` to configure:
 If your Django app and Celery workers run in separate processes (or separate containers), use the Prometheus multiprocess collector so all processes contribute to a single `/metrics` endpoint.
 
 - Use `prometheus_client` multiprocess mode with `PROMETHEUS_MULTIPROC_DIR` pointing to a shared writable directory mounted into both web and worker containers.
-- Ensure the directory is cleaned on process start (files left behind from previous runs can skew metrics).
-
-Example `docker-compose` snippet (mount a shared volume into both services):
-
-```yaml
-services:
-  web:
-    image: your-web-image
-    environment:
-      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
-    volumes:
-      - prometheus_multiproc:/var/prometheus-multiproc
-
-  celery:
-    image: your-celery-image
-    environment:
-      - PROMETHEUS_MULTIPROC_DIR=/var/prometheus-multiproc
-    volumes:
-      - prometheus_multiproc:/var/prometheus-multiproc
-
-volumes:
-  prometheus_multiproc:
-```
-
-Test locally:
-- Start web and celery with the shared volume.
-- Run a task that increments a counter in the worker and ensure `/metrics` on the web shows aggregated counts.
+- Ensure the directory is cleaned on process start (files left behind from previous runs can skew metrics). A cleanup helper script is provided at `scripts/clean_multiproc_dir.sh` and the main `docker-compose.yml` includes an opt-in `multiproc` profile that can run the cleanup on startup.
 
 Cleanup script (recommended):
-- A helper script `scripts/clean_multiproc_dir.sh` is included to remove stale multiprocess files on container startup. Run it before starting your web or worker processes (see `docker-compose.multiproc-example.yml` for an example using `entrypoint`).
+- The helper script `scripts/clean_multiproc_dir.sh` is included to remove stale multiprocess files on container startup. Run it before starting your web or worker processes (see the `multiproc` profile in `docker-compose.yml`).
 - Ensure the multiproc directory is writable by the process that runs Prometheus client.
 
 ### Alertmanager
@@ -207,6 +181,26 @@ Edit `alert-rules.yml` to define:
 - Alert conditions
 - Thresholds
 - Evaluation intervals
+
+---
+
+## 🔐 Environment & Secrets (Render)
+Use Render's environment settings or Secrets to configure runtime values and sensitive data — do not commit real credentials to Git.
+
+Required / recommended variables:
+- `GF_SECURITY_ADMIN_PASSWORD` (set as a generated secret or Render secret) ✅
+- `GF_SECURITY_ADMIN_USER` (optional; defaults to `admin`)
+- `SLACK_WEBHOOK_URL` (Slack notifications; store as a secret)
+- `PAGERDUTY_SERVICE_KEY` (if using PagerDuty; store as a secret)
+- `ALERTING_EMAIL_PASSWORD` / `ALERTING_EMAIL_USERNAME` / `ALERTING_SMARTHOST` (SMTP config for email alerts; passwords should be secrets)
+- Resource limits (optional): `PROMETHEUS_MEM`, `ALERTMANAGER_MEM`, `GRAFANA_MEM`, `NODE_EXPORTER_MEM`
+
+Notes:
+- Render does **not** create `.env` automatically. Use the Render Dashboard or `render.yaml` to set env vars and secrets. 
+- Keep an example in the repo (e.g., `.env.lowmem.example`) and copy it locally when needed: `cp .env.lowmem.example .env`.
+- If you run Django + Celery and use the multiprocess Prometheus collector, Render doesn't provide a shared mount by default—use an alternative approach (Pushgateway, sidecar, or a single-process exporter) or configure a persistent disk if your plan supports it.
+
+Example `render.yaml` snippet is available as `render.yaml.example` for reference.
 
 ## 📈 Metrics
 
