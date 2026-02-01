@@ -16,8 +16,10 @@ RUN wget -q https://github.com/prometheus/prometheus/releases/download/v2.48.0/p
 # Install Grafana (lightweight)
 RUN wget -q https://dl.grafana.com/oss/release/grafana-10.2.3.linux-amd64.tar.gz && \
     tar xzf grafana-10.2.3.linux-amd64.tar.gz && \
-    mv grafana-10.2.3 /opt/grafana && \
-    rm grafana-10.2.3.linux-amd64.tar.gz
+    EXTRACT_DIR=$(tar -tf grafana-10.2.3.linux-amd64.tar.gz | head -1 | cut -f1 -d"/") && \
+    mv "$EXTRACT_DIR" /opt/grafana && \
+    rm grafana-10.2.3.linux-amd64.tar.gz && \
+    chown -R grafana:grafana /opt/grafana
 
 # Create grafana user and directories
 RUN adduser -D -h /var/lib/grafana grafana && \
