@@ -28,10 +28,6 @@ RUN adduser -D -h /var/lib/grafana grafana && \
     chown -R grafana:grafana /var/lib/grafana /var/lib/grafana/plugins /var/log/grafana /etc/grafana /etc/grafana/provisioning && \
     chown -R prometheus:prometheus /opt/prometheus /prometheus /etc/prometheus
 
-# Copy helper scripts
-COPY wait-for-prometheus.sh /usr/local/bin/wait-for-prometheus
-RUN chmod +x /usr/local/bin/wait-for-prometheus
-
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/prometheus.yml
 COPY alert-rules.yml /etc/prometheus/alert-rules.yml
