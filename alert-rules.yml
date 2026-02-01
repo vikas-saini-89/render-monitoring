@@ -5,7 +5,7 @@ groups:
     rules:
       # CRITICAL: OOM Risk (< 100MB available)
       - alert: CriticalOOMRisk
-        expr: node_memory_MemAvailable_bytes < 100_000_000
+        expr: node_memory_MemAvailable_bytes < 100000000
         for: 1m
         labels:
           severity: critical
@@ -68,7 +68,7 @@ groups:
     rules:
       # WARNING: RAM Getting Tight (100-300MB available)
       - alert: WarningRAMTight
-        expr: node_memory_MemAvailable_bytes < 300_000_000 and node_memory_MemAvailable_bytes > 100_000_000
+        expr: node_memory_MemAvailable_bytes < 300000000 and node_memory_MemAvailable_bytes > 100000000
         for: 5m
         labels:
           severity: warning
@@ -162,7 +162,7 @@ groups:
     rules:
       # INFO: RAM Warning Level
       - alert: InfoRAMWarning
-        expr: node_memory_MemAvailable_bytes < 500_000_000 and node_memory_MemAvailable_bytes > 300_000_000
+        expr: node_memory_MemAvailable_bytes < 500000000 and node_memory_MemAvailable_bytes > 300000000
         for: 10m
         labels:
           severity: info
