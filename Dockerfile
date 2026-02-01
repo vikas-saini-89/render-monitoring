@@ -16,11 +16,13 @@ RUN wget -q https://github.com/prometheus/prometheus/releases/download/v2.48.0/p
 # Install Grafana (lightweight)
 RUN wget -q https://dl.grafana.com/oss/release/grafana-10.2.3.linux-amd64.tar.gz && \
     tar xzf grafana-10.2.3.linux-amd64.tar.gz && \
-    mv grafana-v10.2.3 /opt/grafana && \
+    mv grafana-10.2.3 /opt/grafana && \
     rm grafana-10.2.3.linux-amd64.tar.gz
 
-# Create directories
-RUN mkdir -p /etc/prometheus /etc/grafana /var/lib/grafana /prometheus /etc/supervisor/conf.d
+# Create grafana user and directories
+RUN adduser -D -h /var/lib/grafana grafana && \
+    mkdir -p /etc/prometheus /etc/grafana /var/lib/grafana /var/log/grafana /prometheus /etc/supervisor/conf.d && \
+    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/prometheus.yml
@@ -28,6 +30,7 @@ COPY alert-rules.yml /etc/prometheus/alert-rules.yml
 COPY grafana-datasources.yml /etc/grafana/provisioning/datasources/datasources.yml
 COPY dashboard-provider.yml /etc/grafana/provisioning/dashboards/dashboard-provider.yml
 COPY dashboards /etc/grafana/provisioning/dashboards
+COPY grafana.ini /etc/grafana/grafana.ini
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY start.sh /start.sh
 
