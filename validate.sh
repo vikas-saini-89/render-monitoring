@@ -160,7 +160,7 @@ if [ -f ".env" ]; then
         print_warning "Estimated total service memory: ${mem_total_mb}MB (> 500MB). Adjust .env values for low-memory deployment"
     fi
 else
-    print_warning ".env file not found. Use .env.example as a template and set secure values"
+    print_warning ".env file not found. Use .env.lowmem.example as a template and set secure values (copy to .env locally)"
 fi
 
 # Check nginx sample config
