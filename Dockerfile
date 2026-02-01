@@ -10,7 +10,8 @@ RUN apk add --no-cache \
 # Install Prometheus (lightweight)
 RUN wget -q https://github.com/prometheus/prometheus/releases/download/v2.48.0/prometheus-2.48.0.linux-amd64.tar.gz && \
     tar xzf prometheus-2.48.0.linux-amd64.tar.gz && \
-    mv prometheus-2.48.0.linux-amd64 /opt/prometheus && \
+    EXTRACT_DIR=$(tar -tf prometheus-2.48.0.linux-amd64.tar.gz | head -1 | cut -f1 -d"/") && \
+    mv "$EXTRACT_DIR" /opt/prometheus && \
     rm prometheus-2.48.0.linux-amd64.tar.gz
 
 # Install Grafana (lightweight)
@@ -20,10 +21,12 @@ RUN wget -q https://dl.grafana.com/oss/release/grafana-10.2.3.linux-amd64.tar.gz
     mv "$EXTRACT_DIR" /opt/grafana && \
     rm grafana-10.2.3.linux-amd64.tar.gz
 
-# Create grafana user and directories
+# Create grafana and prometheus users and directories
 RUN adduser -D -h /var/lib/grafana grafana && \
+    adduser -D -h /prometheus prometheus && \
     mkdir -p /etc/prometheus /etc/grafana /var/lib/grafana /var/log/grafana /prometheus /etc/supervisor/conf.d && \
-    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana /opt/grafana
+    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana /opt/grafana && \
+    chown -R prometheus:prometheus /opt/prometheus /prometheus /etc/prometheus
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/prometheus.yml
