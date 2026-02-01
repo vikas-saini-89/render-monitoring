@@ -4,7 +4,7 @@
 TIMEOUT=${1:-60}
 COUNT=0
 while [ $COUNT -lt "$TIMEOUT" ]; do
-  if wget -q --spider http://localhost:9090/-/healthy; then
+  if wget -q --spider http://127.0.0.1:9090/-/healthy; then
     echo "Prometheus is healthy"
     exit 0
   fi
