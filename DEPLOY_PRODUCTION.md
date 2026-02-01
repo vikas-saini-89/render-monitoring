@@ -24,3 +24,7 @@ Quick tips
 - Keep `GF_SECURITY_ADMIN_PASSWORD` as an environment variable or secret.
 - Use persistent storage for Prometheus TSDB and Grafana data dirs.
 - Add CI that builds the image and validates `/api/health` and `/-/healthy` endpoints.
+
+Docker Compose note
+- If you deploy using `docker-compose`, use the compose-specific Grafana datasource: `grafana-datasources-compose.yml`.
+- The compose datasource uses the Prometheus service hostname (`http://prometheus:9090`) so Grafana can reach Prometheus across containers.

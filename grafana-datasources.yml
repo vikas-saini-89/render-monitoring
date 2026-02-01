@@ -1,3 +1,10 @@
+# Datasource provisioning for Grafana
+# - When running the combined single-container image, use the IPv4 loopback:
+#     url: http://127.0.0.1:9090
+# - When running with docker-compose (Prometheus in a separate container),
+#   use the Prometheus service hostname instead (see `grafana-datasources-compose.yml`):
+#     url: http://prometheus:9090
+
 apiVersion: 1
 
 datasources:
