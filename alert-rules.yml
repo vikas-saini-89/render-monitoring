@@ -1,3 +1,4 @@
+---
 groups:
   - name: college_hr_system_critical
     interval: 30s
@@ -14,7 +15,7 @@ groups:
           summary: "CRITICAL: Out of Memory Risk"
           description: "Available RAM: {{ humanize $value }}B. VM will crash immediately. Action: Kill stuck process, restart Celery, or restart VM."
           dashboard: "payroll-monitoring"
-          
+
       # CRITICAL: Database Deadlock
       - alert: CriticalDatabaseDeadlock
         expr: pg_locks_waiting > 0
@@ -25,7 +26,7 @@ groups:
         annotations:
           summary: "CRITICAL: Database Deadlock"
           description: "{{ $value }} transactions waiting for locks. Kill blocking query:"
-          
+
       # CRITICAL: Centrifugo Down (real-time updates dead)
       - alert: CriticalCentrifugoDown
         expr: up{job="centrifugo"} == 0
@@ -36,7 +37,7 @@ groups:
         annotations:
           summary: "CRITICAL: Centrifugo Down"
           description: "Real-time updates are dead. HR dashboard won't update. Check Centrifugo service."
-          
+
       # CRITICAL: Payroll Processing Failure
       - alert: CriticalPayrollProcessingFailed
         expr: |
@@ -75,7 +76,7 @@ groups:
         annotations:
           summary: "WARNING: RAM Getting Tight"
           description: "Available RAM: {{ humanize $value }}B. Monitor closely during payroll runs."
-          
+
       # WARNING: Payroll Queue Backlog
       - alert: WarningPayrollQueueBacklog
         expr: celery_queue_length{queue="payroll_tasks"} > 10
@@ -97,7 +98,7 @@ groups:
         annotations:
           summary: "WARNING: Database connection pool high usage"
           description: "Active DB connections ({{ $value }}) above 90. Adjust threshold to match your DB pool max, or increase pool size."
-          
+
       # WARNING: Chunk Processing Slow (>5 seconds)
       - alert: WarningPayrollChunkSlow
         expr: histogram_quantile(0.95, rate(celery_task_duration_seconds_bucket{task_name="process_payroll_chunk"}[5m])) > 5
@@ -108,12 +109,12 @@ groups:
         annotations:
           summary: "WARNING: Payroll Chunks Processing Slow"
           description: "95th percentile chunk duration: {{ humanize $value }}s (target: <2s). Check database performance."
-          
+
       # WARNING: Attendance API Slow
       - alert: WarningAttendanceAPILatency
         expr: |
-          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m]) 
-          / rate(django_http_request_duration_seconds_count{path="/api/attendance/check-in"}[5m]) 
+          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m])
+          / rate(django_http_request_duration_seconds_count{path="/api/attendance/check-in"}[5m])
           > 1
         for: 2m
         labels:
@@ -122,7 +123,7 @@ groups:
         annotations:
           summary: "WARNING: Attendance API Slow"
           description: "Average response time: {{ humanize $value }}s (target: <100ms). Check Redis and DB connection."
-          
+
       # WARNING: High Disk Usage
       - alert: WarningHighDiskUsage
         expr: node_filesystem_used_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} > 0.85
@@ -133,7 +134,7 @@ groups:
         annotations:
           summary: "WARNING: High Disk Usage"
           description: "Disk usage on /: {{ humanizePercentage $value }}. Clean up old logs or expand disk."
-          
+
       # WARNING: High I/O Wait (slow database)
       - alert: WarningHighIOWait
         expr: rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 30
@@ -144,7 +145,7 @@ groups:
         annotations:
           summary: "WARNING: High I/O Wait"
           description: "I/O wait time: {{ humanizePercentage $value }}. Database queries are slow."
-          
+
       # WARNING: Low Cache Hit Ratio
       - alert: WarningLowCacheHitRatio
         expr: pg_cache_hit_ratio < 0.98
@@ -169,11 +170,11 @@ groups:
         annotations:
           summary: "INFO: RAM Usage High"
           description: "Available RAM: {{ humanize $value }}B. Normal operation but approaching warning threshold."
-          
+
       # INFO: Attendance API Response Time
       - alert: InfoAttendanceAPITiming
         expr: |
-          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m]) 
+          rate(django_http_request_duration_seconds_sum{path="/api/attendance/check-in"}[5m])
           / rate(django_http_request_duration_seconds_count{path="/api/attendance/check-in"}[5m])
         for: 1m
         labels:
@@ -182,12 +183,12 @@ groups:
         annotations:
           summary: "INFO: Attendance API Response Time"
           description: "Current response time: {{ humanize $value }}s (baseline for analysis)"
-          
+
       # INFO: Payroll Success Rate
       - alert: InfoPayrollSuccessRate
         expr: |
-          celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"} 
-          / (celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"} 
+          celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"}
+          / (celery_task_total{task_name="process_payroll_chunk", status="SUCCESS"}
           + celery_task_total{task_name="process_payroll_chunk", status="FAILURE"})
         for: 1m
         labels:
