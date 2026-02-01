@@ -18,13 +18,12 @@ RUN wget -q https://dl.grafana.com/oss/release/grafana-10.2.3.linux-amd64.tar.gz
     tar xzf grafana-10.2.3.linux-amd64.tar.gz && \
     EXTRACT_DIR=$(tar -tf grafana-10.2.3.linux-amd64.tar.gz | head -1 | cut -f1 -d"/") && \
     mv "$EXTRACT_DIR" /opt/grafana && \
-    rm grafana-10.2.3.linux-amd64.tar.gz && \
-    chown -R grafana:grafana /opt/grafana
+    rm grafana-10.2.3.linux-amd64.tar.gz
 
 # Create grafana user and directories
 RUN adduser -D -h /var/lib/grafana grafana && \
     mkdir -p /etc/prometheus /etc/grafana /var/lib/grafana /var/log/grafana /prometheus /etc/supervisor/conf.d && \
-    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana
+    chown -R grafana:grafana /var/lib/grafana /var/log/grafana /etc/grafana /opt/grafana
 
 # Copy configuration files
 COPY prometheus.yml /etc/prometheus/prometheus.yml
