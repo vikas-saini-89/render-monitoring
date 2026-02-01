@@ -129,6 +129,27 @@ else
     print_error "Docker Compose is not installed"
 fi
 
+# Check .env for credentials and resource limits
+if [ -f ".env" ]; then
+    print_ok ".env file found"
+    # shellcheck disable=SC1090
+    source .env
+    if [ -z "${GF_SECURITY_ADMIN_PASSWORD:-}" ]; then
+        print_warning "GF_SECURITY_ADMIN_PASSWORD not set in .env. Set a strong password or use Docker secrets"
+    else
+        print_ok "GF_SECURITY_ADMIN_PASSWORD is set (from .env)"
+    fi
+else
+    print_warning ".env file not found. Use .env.example as a template and set secure values"
+fi
+
+# Check nginx sample config
+if [ -d "nginx" ] && [ -f "nginx/conf.d/monitoring.conf" ]; then
+    print_ok "Nginx sample config present: nginx/conf.d/monitoring.conf"
+else
+    print_warning "Nginx sample config missing (create nginx/conf.d/monitoring.conf if you plan to use the proxy)"
+fi
+
 # Check if services are running (if docker-compose.yml is in current directory)
 if [ -f "docker-compose.yml" ]; then
     echo ""

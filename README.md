@@ -117,7 +117,7 @@ After deployment, access the services at:
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Grafana | http://your-ip:3000 | admin / admin |
+| Grafana | http://your-ip:3000 | Admin user: `${GF_SECURITY_ADMIN_USER:-admin}`, password: set via `GF_SECURITY_ADMIN_PASSWORD` or Docker secret |
 | Prometheus | http://your-ip:9090 | - |
 | Alertmanager | http://your-ip:9093 | - |
 

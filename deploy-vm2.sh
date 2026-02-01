@@ -61,9 +61,15 @@ fi
 
 # Start the monitoring stack
 echo ""
-echo "🔨 Starting monitoring stack with docker-compose..."
+echo "🔨 Starting monitoring stack with docker-compose (using .env)..."
 cd "$MONITORING_DIR"
-docker-compose -f docker-compose.yml up -d
+# Use --env-file to ensure resource limits and secrets from .env are loaded
+if command -v docker-compose &> /dev/null; then
+  docker-compose --env-file .env -f docker-compose.yml up -d
+else
+  # Fallback if old docker-compose is used; docker-compose will still load .env by default
+  docker-compose -f docker-compose.yml up -d
+fi
 
 # Wait for services to be ready
 echo ""
