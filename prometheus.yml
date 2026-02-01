@@ -1,8 +1,8 @@
 ---
 global:
-  scrape_interval: 60s
-  scrape_timeout: 15s
-  evaluation_interval: 60s
+  scrape_interval: 120s
+  scrape_timeout: 10s
+  evaluation_interval: 120s
 
 # Alertmanager configuration (disabled for free tier)
 # alerting:
