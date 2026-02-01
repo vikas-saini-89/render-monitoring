@@ -1,0 +1,106 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: '{{ SLACK_WEBHOOK_URL }}'  # Set via environment or config
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+# Grouping configuration
+route:
+  # Default grouping
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+  # Critical routes
+  routes:
+    # CRITICAL alerts - immediate action required
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s  # Send immediately
+      repeat_interval: 5m  # Repeat every 5 minutes
+      
+    # WARNING alerts - less urgent
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      repeat_interval: 1h
+
+    # INFO alerts - tracking only
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      repeat_interval: 24h
+
+# Receivers define where to send notifications
+receivers:
+  # Default receiver
+  - name: 'default'
+    slack_configs:
+      - channel: '#monitoring'
+        title: 'Monitoring Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ .GroupLabels.service }}: {{ .CommonAnnotations.description }}'
+
+  # Critical alerts - Slack + PagerDuty + Email
+  - name: 'critical-alerts'
+    slack_configs:
+      - channel: '#critical-alerts'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}'
+        color: 'danger'  # Red in Slack
+        send_resolved: true
+    email_configs:
+      - to: 'devops@college.edu'
+        from: 'alerting@college.edu'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerting@college.edu'
+        auth_password: '{{ ALERTING_EMAIL_PASSWORD }}'
+        headers:
+          Subject: 'CRITICAL ALERT: {{ .GroupLabels.alertname }}'
+    # Uncomment for PagerDuty integration
+    # pagerduty_configs:
+    #   - service_key: '{{ PAGERDUTY_SERVICE_KEY }}'
+    #     description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
+
+  # Warning alerts - Slack only
+  - name: 'warning-alerts'
+    slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.summary }}\n{{ .CommonAnnotations.description }}'
+        color: 'warning'  # Orange/Yellow in Slack
+        send_resolved: true
+
+  # Info alerts - Slack only, less noisy
+  - name: 'info-alerts'
+    slack_configs:
+      - channel: '#monitoring-info'
+        title: 'ℹ️ INFO: {{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.description }}'
+        color: 'good'  # Green in Slack
+        send_resolved: false
+
+# Inhibition rules - suppress certain alerts when others are firing
+inhibit_rules:
+  # Suppress WARNING if CRITICAL is already firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # Suppress INFO if WARNING or CRITICAL is firing
+  - source_match:
+      severity: 'warning'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'service']
+
+  # If OOM CRITICAL is firing, suppress other warnings
+  - source_match:
+      alertname: 'CriticalOOMRisk'
+    target_match_re:
+      severity: 'warning|info'
+    equal: []  # Suppress all warnings/info during OOM

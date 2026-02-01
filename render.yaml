@@ -1,22 +1,17 @@
 services:
+  # All-in-One Monitoring Stack (Optimized for Free Tier)
   - type: web
-    name: prometheus
-    env: docker
+    name: monitoring-stack
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
-    rootDir: prometheus
-    dockerfilePath: Dockerfile
-    autoDeploy: true
-    envVars:
-      - key: PORT
-        value: 9090
-
-  - type: web
-    name: grafana
-    env: docker
-    plan: free
-    rootDir: grafana
-    dockerfilePath: Dockerfile
-    autoDeploy: true
     envVars:
       - key: PORT
         value: 3000
+      - key: GF_SECURITY_ADMIN_USER
+        value: admin
+      - key: GF_SECURITY_ADMIN_PASSWORD
+        generateValue: true
+      - key: GF_USERS_ALLOW_SIGN_UP
+        value: false
+    healthCheckPath: /api/health
