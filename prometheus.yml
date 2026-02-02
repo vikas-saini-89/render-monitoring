@@ -32,5 +32,5 @@ scrape_configs:
   # Celery exporter (reads REDIS_URL from environment)
   - job_name: 'celery'
     static_configs:
-      - targets: ['10.0.0.193:9540']  # Celery exporter running on VM (private IP)
+      - targets: ['10.0.0.105:9540']  # Celery exporter running on VM (private IP 10.0.0.105)
     scrape_interval: 30s
