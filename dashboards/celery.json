@@ -1,0 +1,52 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"unit": "ms"},"overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [
+        {"expr": "(rate(celery_task_runtime_seconds_sum[5m]) / rate(celery_task_runtime_seconds_count[5m])) * 1000", "refId": "A"}
+      ],
+      "title": "Celery Task Runtime (avg p50/p95)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {},"overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 2,
+      "targets": [
+        {"expr": "sum by (task_name) (celery_tasks_active)", "refId": "A"}
+      ],
+      "title": "Active Tasks by Name",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {"defaults": {"unit": "short"},"overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 3,
+      "targets": [
+        {"expr": "sum by (state) (increase(celery_tasks_total[1h]))", "refId": "A"}
+      ],
+      "title": "Tasks Completed (1h) by State",
+      "type": "bar-chart"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": ["celery","tasks"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h","to": "now"},
+  "title": "⚙️ Celery Metrics",
+  "uid": "celery-metrics",
+  "version": 0
+}
